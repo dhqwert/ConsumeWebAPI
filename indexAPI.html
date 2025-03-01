@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Ảnh Sinh viên</title>
+</head>
+<body>
+    <h2>Quản lý Ảnh Sinh viên</h2>
+
+    <label for="Id">Mã Sinh viên:</label>
+    <input type="text" id="Id" placeholder="Nhập mã sinh viên">
+
+    <br>
+
+    <label for="imageInput">Chọn ảnh:</label>
+    <input type="file" id="imageInput" accept="image/png, image/jpeg">
+
+    <br>
+
+    <img id="imagePreview" src="" alt="Xem trước ảnh" width="200">
+
+    <br>
+
+    <button onclick="handleSave()">Save</button>
+
+    <p id="message"></p>
+
+    <script>
+        let base64Image = "";
+
+        // Chuyển ảnh sang base64
+        document.getElementById("imageInput").addEventListener("change", function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    base64Image = event.target.result;
+                    document.getElementById("imagePreview").src = base64Image;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function handleSave() {
+            const studentId = document.getElementById("Id").value.trim();
+            const messageBox = document.getElementById("message");
+
+            if (!studentId) {
+                messageBox.textContent = "Vui lòng nhập mã sinh viên!";
+                return;
+            }
+            if (!base64Image) {
+                messageBox.textContent = "Vui lòng chọn ảnh!";
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5211/api/Students/UpdatePhoto/${studentId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ Photo: base64Image })
+                });
+
+                const data = await response.json();
+                messageBox.textContent = response.ok ? data.message : "Lỗi cập nhật ảnh!";
+            } catch (error) {
+                console.error("Lỗi cập nhật ảnh:", error);
+                messageBox.textContent = "Lỗi kết nối server!";
+            }
+        }
+    </script>
+</body>
+</html>
